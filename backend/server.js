@@ -4,6 +4,8 @@ import 'dotenv/config'
 import connectDB from './config/mongodb.js'
 import connectCloudinary from './config/cloudinary.js'
 import adminRouter from './routes/adminRoutes.js'
+import doctorRouter from './routes/doctorRoute.js'
+import userRouter from './routes/userRoute.js'
 
 //app configuration
 const app = express()
@@ -17,6 +19,8 @@ app.use(cors) //will conect backend with frontend
 
 //api endpoint
 app.use('/api/admin',adminRouter) 
+app.use('api/docotr' , doctorRouter)
+app.use('/api/user',userRouter)
 //localhost:400/api/admin
 
 
