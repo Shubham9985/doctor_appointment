@@ -1,18 +1,59 @@
-import React, { useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
+import { AppContext } from '../context/AppContext'
+import axios from 'axios'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
 
 const Login = () => {
+
+  const {backendURL , token , setToken} = useContext(AppContext)
+  const navigate = useNavigate()
+
   const [ state , setState ] = useState('Sign Up')
 
   const [email , setEmail] = useState('')
   const [password , setPassword] = useState('')
   const [name , setName] = useState('')
 
+
+
   const onSubmitHandler = async (event) => {
     event.preventDefault()
+    try {
+      
+      if (state === 'Sign Up') {
+        const {data} = await axios.post(backendURL + '/api/user/register' , {name , password , email})
+        if(data.success){
+          localStorage.setItem('token',data.token)
+          setToken(data.token)
+        }
+        else{
+          toast.error(data.message)
+        }
+      }
+      else{
+        const {data} = await axios.post(backendURL + '/api/user/login' , {password , email})
+        if(data.success){
+          localStorage.setItem('token',data.token)
+          setToken(data.token)
+        }
+        else{
+          toast.error(data.message)
+        }
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }
   }
 
+  useEffect(() =>{
+    if (token) {
+      navigate('/')
+    }
+  },[token])
+
   return (
-    <form className='flex items-center min-h-[80vh] '>
+    <form onSubmit={onSubmitHandler} className='flex items-center min-h-[80vh] '>
       <div className='flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-9px border rounded-xl text-zinc-600 text-sm shadow-lg'>
         <p className='text-2xl font-semibold'>{state === 'Sign Up' ? "Create an account" : "Login"}</p>
         <p>Please {state === 'Sign Up' ? "Sign up" : "log in"} to book an appointment</p>
@@ -32,7 +73,7 @@ const Login = () => {
           <p>Password:</p>
           <input className='border border-zinc-300 rounded w-full mt-1 p-2' type='password' value={password} onChange={(e) => setPassword(e.target.value)}  required/>
         </div>
-        <button className='bg-primary text-white w-full py-2 rounded-md text-base'>{state === 'Sign Up' ? "Create an account" : "Login"}</button>
+        <button type='submit' className='bg-primary text-white w-full py-2 rounded-md text-base'>{state === 'Sign Up' ? "Create an account" : "Login"}</button>
         {
           state === 'Sign Up' ? 
           <p>Already have an account? <span onClick={() => setState('Login')} className='text-primary cursor-pointer underline'>Login Here</span></p>
