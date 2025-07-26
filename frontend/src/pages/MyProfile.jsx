@@ -3,6 +3,7 @@ import { assets } from '../assets/assets'
 import { useContext } from 'react';
 import { AppContext } from '../context/AppContext';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const MyProfile = () => {
   const {userData , setUserData , token , backendURL , loadUserProfileData} = useContext(AppContext) 
@@ -22,10 +23,21 @@ const MyProfile = () => {
       
       image && formData.append('image',image)
 
-      const {data} = await axios.post(backendURL + '') 
+      const {data} = await axios.post(backendURL + '/api/user/update-profile',formData,{header:{token}})
+      
+      if (data.success) {
+        toast.success(data.message)
+        await loadUserProfileData()
+        setIsEdit(false)
+        setImage(false)
+      }
+      else{
+        toast.error(data.message)
+      }
 
     }catch(error){
-
+      console.log(error);
+      toast.error(error.message)
     }
   }
 
