@@ -1,23 +1,26 @@
 import validator from 'validator'
 import bcrypt from 'bcrypt'
 import userModel from '../models/userModel.js'
-import jwt from 'jsonwebtoken'
-import { v2 as cloudinary } from 'cloudinary'
 import doctorModel from '../models/doctorModel.js'
 import appointmentModel from '../models/appointmentModel.js'
+import jwt from 'jsonwebtoken'
 import razorpay from 'razorpay'
+import {v2 as cloudinary} from 'cloudinary'
 
+const razorpayInstance = new razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+})
 
 const registerUser = async (req, res) => {
     try {
-
         const { name, email, password } = req.body
 
         if (!name || !email || !password) {
             return res.json({ success: false, message: "missing details" })
         }
 
-        if (!validator.isEmail()) {
+        if (!validator.isEmail(email)) {
             return res.json({ success: false, message: "invalid email" })
         }
 
@@ -40,11 +43,9 @@ const registerUser = async (req, res) => {
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
 
         res.json({ success: true, token })
-
     } catch (error) {
-        console.log((error));
+        console.log(error);
         res.json({ success: false, message: error.message })
-
     }
 }
 
@@ -65,7 +66,7 @@ const loginUser = async (req, res) => {
             res.json({ success: true, token })
         }
         else {
-            res.json({ success: false, message: "invallid credentials" })
+            res.json({ success: false, message: "invalid credentials" })
         }
 
     } catch (error) {
@@ -92,7 +93,7 @@ const updateProfile = async (req, res) => {
         const imageFile = req.file
 
         if (!name || !phone || !dob || !gender) {
-            return res.json({ success: false, message: "data mising" })
+            return res.json({ success: false, message: "data missing" })
         }
 
         await userModel.findByIdAndUpdate(userId, { name, phone, address: JSON.parse(address), dob, gender })
@@ -121,15 +122,15 @@ const bookAppointment = async (req, res) => {
 
         const docData = await doctorModel.findById(docId).select('-password')
 
-        if (!docData.availiable) {
-            return res.json({ success: false, message: "doctor nott availiable" })
+        if (!docData.available) {
+            return res.json({ success: false, message: "doctor not available" })
         }
 
         let slots_booked = docData.slots_booked
 
         if (slots_booked[slotDate]) {
             if (slots_booked[slotDate].includes(slotTime)) {
-                return res.json({ success: false, message: "slot nott availiable" })
+                return res.json({ success: false, message: "slot not available" })
             }
             else {
                 slots_booked[slotDate].push(slotTime)
@@ -196,13 +197,13 @@ const cancelAppointment = async (req, res) => {
 
         await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
 
-        const { docId, slotData, slotTime } = appointmentData
+        const { docId, slotDate, slotTime } = appointmentData
 
         const doctorData = await doctorModel.findById(docId)
 
         let slots_booked = doctorData.slots_booked
 
-        slots_booked[slotData] = slots_booked[slotData].filter(e => e !== slotTime)
+        slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime)
 
         await doctorModel.findByIdAndUpdate(docId, { slots_booked })
 
@@ -215,12 +216,6 @@ const cancelAppointment = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
-
-const razorpayInstance = new razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-})
-
 
 const paymentRazorpay = async (req, res) => {
 
@@ -241,7 +236,7 @@ const paymentRazorpay = async (req, res) => {
 
         const order = await razorpayInstance.orders.create(options)
 
-        res.json({ succes: true, order })
+        res.json({ success: true, order })
     } catch (error) {
         console.log((error));
         res.json({ success: false, message: error.message })
@@ -256,10 +251,10 @@ const verifyRazorpay = async(req,res) =>{
 
         if(orderInfo.status === 'paid'){
             await appointmentModel.findByIdAndUpdate(orderInfo.receipt , {payment:true})
-            res.json({succes:true,message:"payment successful"})
+            res.json({success:true,message:"payment successful"})
         }
         else{
-             res.json({succes:false,message:"payment failed"})
+            res.json({success:false,message:"payment failed"})
         }
 
 

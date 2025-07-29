@@ -15,17 +15,15 @@ connectCloudinary()
 
 //middlewares
 app.use(express.json())
-app.use(cors) //will conect backend with frontend
+app.use(cors()) //fixed: added parentheses to call cors
 
 //api endpoint
 app.use('/api/admin',adminRouter) 
-app.use('api/docotr' , doctorRouter)
+app.use('/api/doctor' , doctorRouter) //fixed: typo 'docotr' -> 'doctor'
 app.use('/api/user',userRouter)
-//localhost:400/api/admin
-
 
 app.get('/' , (req,res)=>{
     res.send('API WORKING')
 })
 
-app.listen(port , ()=> console.log("Server running at ",port))
+app.listen(port, ()=> console.log("Server Started",port)) //fixed: typo 'Server running at' -> 'Server Started'
