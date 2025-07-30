@@ -56,7 +56,7 @@ const Dashboard = () => {
 
         <div className='pt-4 border border-t-0'>
           {
-            dashData.latestAppointments.map((item, index) => {
+            dashData.latestAppointments.reverse().map((item, index) => (
               <div className='flex items-center px-6 py-3 gap-3 hover:bg-gray-100' key={index}>
                 <img className='w-10 rounded-full' src={item.docData.image} alt='' />
                 <div className='flex-1 text-sm'>
@@ -69,7 +69,7 @@ const Dashboard = () => {
                 }
 
               </div>
-            })}
+            ))}
         </div>
 
       </div>

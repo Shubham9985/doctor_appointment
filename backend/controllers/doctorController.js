@@ -2,10 +2,11 @@ import doctorModel from '../models/doctorModel.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import appointmentModel from '../models/appointmentModel.js'
+import doctorModel from '../models/doctorModel.js'
 
 const changeAvailability = async (req,res) => {
     try {
-        const {docId} = req.body
+        const {docId} = req.body //we will get the docId form the authDoctor middleware
         const docData = await doctorModel.findById(docId)
         await doctorModel.findByIdAndUpdate(docId , {available : !docData.available})
         res.json({success:true , message: 'Availability changed'})
@@ -53,7 +54,7 @@ const loginDoctor = async (req,res) => {
 
 const appointmentsDoctor = async (req,res) => {
     try{
-        const {docId} = req.body
+        const {docId} = req.body //we will get the docId form the authDoctor middleware
         const appointments = await appointmentModel.find({docId})
         res.json({success:true,appointments})
     }
@@ -63,4 +64,76 @@ const appointmentsDoctor = async (req,res) => {
     }
 }
 
-export {changeAvailability , doctorList,loginDoctor,appointmentsDoctor}
+//we will get the docId form the authDoctor middleware
+const appointmentComplete = async (req,res) => {
+    try{
+        const {docId , appointmentId} = req.body
+        const appointmentData = await appointmentModel.findById(appointmentId)
+        if(appointmentData && appointmentData.docId === docId){
+            await appointmentModel.findByIdAndUpdate(appointmentId , {isCompleted:true})
+            return res.json({success:true,message:"appointment completed"})
+        }
+        else{
+            return res.json({success:false,message:"unauthorized action"})
+        }
+    }
+    catch (error) {
+        console.log(error);
+        res.json({success:false,message:error.message})
+    }
+}
+
+const appointmentCancel = async (req,res) => {
+    try{
+        const {docId , appointmentId} = req.body
+        const appointmentData = await appointmentModel.findById(appointmentId)
+        if(appointmentData && appointmentData.docId === docId){
+            await appointmentModel.findByIdAndUpdate(appointmentId , {Cancelled:true})
+            return res.json({success:true,message:"appointment Cancelled"})
+        }
+        else{
+            return res.json({success:false,message:"unauthorized action"})
+        }
+    }
+    catch (error) {
+        console.log(error);
+        res.json({success:false,message:error.message})
+    }
+}
+
+const doctorDashboard = async (req,res) => {
+    try{
+        const {docId} = req.body //we will get the docId form the authDoctor middleware
+        const appointments = await appointmentModel.find({docId})
+
+        let earning = 0
+
+        appointments.map((item) =>{
+            if(item.isCompleted || item.payment){
+                earning += item.amount
+            }
+        })
+
+        let patients = []
+        appointments.map((item) =>{
+            if(!patients.includes(item.userID)){
+                patients.push(item.userId)
+            }
+        })
+
+        const dashData = {
+            earning,
+            patients:patients.length,
+            appointments:appointments.length,
+            latestAppointments : appointments.reverse().slice(0,5)
+        }
+
+        res.json({success:true,dashData})
+    }
+    catch (error) {
+        console.log(error);
+        res.json({success:false,message:error.message})
+    }
+}
+
+export {changeAvailability , doctorList,loginDoctor,appointmentsDoctor,appointmentComplete,appointmentCancel,doctorDashboard}
