@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 const MyAppointments = () => {
-  const { backendURL , token , getDoctorsData } = useContext(AppContext);
+  const { backendURL , token , getDoctorsData , loadUserProfileData } = useContext(AppContext);
 
   const [appointments , setAppointments] = useState([])
 
@@ -24,7 +24,7 @@ const MyAppointments = () => {
       const {data} = await axios.get(backendURL + '/api/user/appointment' , {headers:{token}})
 
       if(data.success){
-        setAppointments(data.appointments.reverse)
+        setAppointments(data.appointments.reverse())
       }
     } catch (error) { 
       console.log(error)
@@ -119,10 +119,11 @@ const MyAppointments = () => {
               </div>
               <div></div>
               <div className='flex flex-col gap-2 justify-end'>
-                {!item.cancelled && item.payment && <button className='sm:min-w-48 border py-2 rounded text-stone-500 bg-indigo-50'>Paid</button>}
-                {!item.cancelled && item.payment && <button onClick={() => appointmentRazorpay(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-500'>Pay Online</button>}
-                {!item.cancelled && <button onClick={()=>cancelAppointment(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded  hover:bg-red-700 hover:text-white transition-all duration-500'>Cancel Appointment</button> }
-                {item.cancelled && <button className='sm:min-w-48 border py-2 border-red-500 rounded text-red-500'>Appointment Canceled</button>}
+                {!item.cancelled && item.payment && !item.isCompleted && <button className='sm:min-w-48 border py-2 rounded text-stone-500 bg-indigo-50'>Paid</button>}
+                {!item.cancelled && item.payment && !item.isCompleted && <button onClick={() => appointmentRazorpay(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-500'>Pay Online</button>}
+                {!item.cancelled && !item.isCompleted &&  <button onClick={()=>cancelAppointment(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded  hover:bg-red-700 hover:text-white transition-all duration-500'>Cancel Appointment</button> }
+                {item.cancelled && !item.isCompleted &&  <button className='sm:min-w-48 border py-2 border-red-500 rounded text-red-500'>Appointment Canceled</button>}
+                {item.isCompleted && <button className='sm:min-w-48 border py-2 border-green-500 rounded text-green-500'>Appointment Completed</button>}
               </div>
             </div>
         ))}
