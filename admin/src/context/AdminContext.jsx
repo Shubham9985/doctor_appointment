@@ -6,7 +6,7 @@ import {toast} from 'react-toastify'
 export const AdminContext = createContext()
 
 const AdminContextProvider = (props)=>{
-    const [aToken , setAToken] = useState(localStorage.getItem('aToken')?localStorage.getItem('aToken'):"")
+    const [aToken , setAToken] = useState(localStorage.getItem('atoken')?localStorage.getItem('atoken'):"")
     const [doctors , setDoctors]  = useState([])
     const [ appointments , setAppointments] = useState([])
     const [dashData , setDashData] = useState(false)
@@ -44,7 +44,7 @@ const AdminContextProvider = (props)=>{
         }
     }
 
-    const getAllAppointments = async(req,res) =>{
+    const getAllAppointments = async() =>{
         try{
             const {data} = await axios.get(backendURL + '/api/admin/appointments' , {headers:{aToken}})
             if(data.success){

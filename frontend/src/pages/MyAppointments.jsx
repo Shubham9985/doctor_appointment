@@ -1,4 +1,4 @@
-import React, { useState , useEffect } from 'react'
+import { useState , useEffect } from 'react'
 import { useContext } from 'react';
 import { AppContext } from '../context/AppContext';
 import axios from 'axios';
@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 const MyAppointments = () => {
-  const { backendURL , token , getDoctorsData , loadUserProfileData } = useContext(AppContext);
+  const { backendUrl , token , getDoctorsData } = useContext(AppContext);
 
   const [appointments , setAppointments] = useState([])
 
@@ -21,7 +21,7 @@ const MyAppointments = () => {
 
   const getUserAppointments = async () =>{
     try {
-      const {data} = await axios.get(backendURL + '/api/user/appointment' , {headers:{token}})
+      const {data} = await axios.get(backendUrl + '/api/user/appointments' , {headers:{token}})
 
       if(data.success){
         setAppointments(data.appointments.reverse())
@@ -34,7 +34,7 @@ const MyAppointments = () => {
 
   const cancelAppointment = async (appointmentID) =>{
     try {
-      const {data } =  await axios.post(backendURL + '/api/user/cancel-appointment' , {appointmentID} , {headers:{token}})
+      const {data } =  await axios.post(backendUrl + '/api/user/cancel-appointment' , {appointmentId: appointmentID} , {headers:{token}})
       if(data.success){
         toast.success(data.message)
         getUserAppointments()
@@ -51,24 +51,23 @@ const MyAppointments = () => {
   }
 
   const initPay =  (order) =>{
-
     const options = {
-      key : import.meta.env.VITE.RAZORPAY_KEY_ID , 
+      key : import.meta.env.VITE_RAZORPAY_KEY_ID ,
       amount : order.amount,
-      currency : order.currency , 
+      currency : order.currency ,
       name : 'Appointment Payment' ,
       description : 'Appointment Payment',
       order_id : order.id ,
-      receipt : order.receipt , 
+      receipt : order.receipt ,
       handler : async (response) =>{
         console.log(response);
         try{
-            const {data} = await axios.post(backendURL + '/api/user/verify-razorpay' , response , {headers:{token}})
+            const {data} = await axios.post(backendUrl + '/api/user/verify-razorpay' , response , {headers:{token}})
             if(data.success){
               toast.success(data.message)
               getUserAppointments()
               navigate('/my-appointments')
-              
+
             }
         }catch(error){
           toast.error(error.message)
@@ -77,15 +76,21 @@ const MyAppointments = () => {
       }
     }
 
-    const rzp = new window.Razorpay(options)
-    rzp.open()
+    if (window.Razorpay) {
+      const rzp = new window.Razorpay(options)
+      rzp.open()
+    } else {
+      toast.error('Payment gateway not available')
+    }
   }
 
   const appointmentRazorpay = async(appointmentID)=>{
     try {
-      const {data} = await axios.post(backendURL + '/api/user/payment-razorpay' + {appointmentID} , {headers:{token}})
+      const {data} = await axios.post(backendUrl + '/api/user/payment-razorpay' , {appointmentId: appointmentID} , {headers:{token}})
       if(data.success){
         initPay(data.order)
+      } else {
+        toast.error(data.message)
       }
     } catch (error) {
       console.log(error)
@@ -120,7 +125,7 @@ const MyAppointments = () => {
               <div></div>
               <div className='flex flex-col gap-2 justify-end'>
                 {!item.cancelled && item.payment && !item.isCompleted && <button className='sm:min-w-48 border py-2 rounded text-stone-500 bg-indigo-50'>Paid</button>}
-                {!item.cancelled && item.payment && !item.isCompleted && <button onClick={() => appointmentRazorpay(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-500'>Pay Online</button>}
+                {!item.cancelled && !item.payment && !item.isCompleted && <button onClick={() => appointmentRazorpay(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-500'>Pay Online</button>}
                 {!item.cancelled && !item.isCompleted &&  <button onClick={()=>cancelAppointment(item._id)} className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded  hover:bg-red-700 hover:text-white transition-all duration-500'>Cancel Appointment</button> }
                 {item.cancelled && !item.isCompleted &&  <button className='sm:min-w-48 border py-2 border-red-500 rounded text-red-500'>Appointment Canceled</button>}
                 {item.isCompleted && <button className='sm:min-w-48 border py-2 border-green-500 rounded text-green-500'>Appointment Completed</button>}

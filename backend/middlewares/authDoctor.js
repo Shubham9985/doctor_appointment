@@ -2,12 +2,15 @@ import jwt from 'jsonwebtoken'
 
 const authDoctor = async(req,res,next) =>{
     try {
-        const {dToken} = req.headers
-        if(!dToken){
+        const {dtoken} = req.headers
+        if(!dtoken){
             return res.json({success:false,message : "login Again"})
         }
-        const token_decode = jwt.verify(dToken,process.env.JWT_SECRET)
+        const token_decode = jwt.verify(dtoken,process.env.JWT_SECRET)
 
+        if (!req.body) {
+            req.body = {}
+        }
         req.body.docId = token_decode.id
 
         next()

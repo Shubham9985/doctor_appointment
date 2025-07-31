@@ -2,7 +2,6 @@ import doctorModel from '../models/doctorModel.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import appointmentModel from '../models/appointmentModel.js'
-import doctorModel from '../models/doctorModel.js'
 
 const changeAvailability = async (req, res) => {
     try {
@@ -17,7 +16,7 @@ const changeAvailability = async (req, res) => {
     }
 }
 
-const doctorList = async (req, res) => {
+const doctorList = async (_, res) => {
     try {
         const doctors = await doctorModel.find({}).select(['-password', '-email'])
         res.json({ success: true, doctors })
@@ -88,7 +87,7 @@ const appointmentCancel = async (req, res) => {
         const { docId, appointmentId } = req.body
         const appointmentData = await appointmentModel.findById(appointmentId)
         if (appointmentData && appointmentData.docId === docId) {
-            await appointmentModel.findByIdAndUpdate(appointmentId, { Cancelled: true })
+            await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
             return res.json({ success: true, message: "appointment Cancelled" })
         }
         else {
@@ -150,8 +149,8 @@ const doctorProfile = async (req, res) => {
 
 const updateDoctorProfile = async (req, res) => {
     try {
-        const { docId, fees, address, availiable } = req.body
-        await doctorModel.findByIdAndUpdate(docId, { fees, address, availiable })
+        const { docId, fees, address, available } = req.body
+        await doctorModel.findByIdAndUpdate(docId, { fees, address, available })
         res.json({ success: true, message: "profile updated" })
     } catch (error) {
         console.log(error);

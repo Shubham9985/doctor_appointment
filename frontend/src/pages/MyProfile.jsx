@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { assets } from '../assets/assets'
 import { useContext } from 'react';
 import { AppContext } from '../context/AppContext';
@@ -6,7 +6,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const MyProfile = () => {
-  const {userData , setUserData , token , backendURL , loadUserProfileData} = useContext(AppContext) 
+  const {userData , setUserData , token , backendUrl , loadUserProfileData} = useContext(AppContext)
 
   const [isEdit, setIsEdit] = useState(false);
   const [image , setImage] = useState(false)
@@ -15,15 +15,15 @@ const MyProfile = () => {
     try{
       const formData =  new FormData()
 
-      formData.append('name',userData.name)
-      formData.append('phone',userData.phone)
-      formData.append('address',JSON.stringify(userData.address))
-      formData.append('gender',userData.gender)
-      formData.append('dob',userData.dob)
-      
+      formData.append('name',userData.name || '')
+      formData.append('phone',userData.phone || '')
+      formData.append('address',JSON.stringify(userData.address || {line1: '', line2: ''}))
+      formData.append('gender',userData.gender || '')
+      formData.append('dob',userData.dob || '')
+
       image && formData.append('image',image)
 
-      const {data} = await axios.post(backendURL + '/api/user/update-profile',formData,{header:{token}})
+      const {data} = await axios.post(backendUrl + '/api/user/update-profile',formData,{headers:{token}})
       
       if (data.success) {
         toast.success(data.message)
@@ -72,25 +72,25 @@ const MyProfile = () => {
           <p className='font-medium'>Phone</p>
           {
             isEdit ?
-              <input className='bg-gray-100 max-w-52' type='text' value={userData.phone} onChange={e => setUserData(prev => ({ ...prev, phone: e.target.value }))} />
-              : <p className='text-blue-400'>{userData.phone}</p>
+              <input className='bg-gray-100 max-w-52' type='text' value={userData.phone || ''} onChange={e => setUserData(prev => ({ ...prev, phone: e.target.value }))} />
+              : <p className='text-blue-400'>{userData.phone || 'Not provided'}</p>
           }
           <p className='font-medium'>Address</p>
           {
             isEdit ?
               <>
                 <p>
-                  <input className='bg-gray-100' type='text' value={userData.address.line1} onChange={e => setUserData(prev => ({ ...prev, address: { ...prev.address, line1: e.target.value } }))} /><br/>
-                <input className='bg-gray-100' type='text' value={userData.address.line2} onChange={e => setUserData(prev => ({ ...prev, address: { ...prev.address, line2: e.target.value } }))} />
+                  <input className='bg-gray-100' type='text' value={userData.address?.line1 || ''} onChange={e => setUserData(prev => ({ ...prev, address: { ...(prev.address || {}), line1: e.target.value } }))} placeholder="Address Line 1" /><br/>
+                <input className='bg-gray-100' type='text' value={userData.address?.line2 || ''} onChange={e => setUserData(prev => ({ ...prev, address: { ...(prev.address || {}), line2: e.target.value } }))} placeholder="Address Line 2" />
                 </p>
               </>
               : <>
                 <p className='text-gray-500'>
-                  {userData.address.line1}
+                  {userData.address?.line1 || 'Not provided'}
                   <br/>
-                  {userData.address.line2}
+                  {userData.address?.line2 || ''}
                 </p>
-  
+
               </>
           }
         </div>
@@ -101,18 +101,19 @@ const MyProfile = () => {
           <p className='font-medium'>Gender</p>
           {
             isEdit ?
-              <select className='bg-gray-100 max-w-20' onChange={(e) => setUserData(prev => ({ ...prev, gender: e.target.value }))} value={userData.gender} >
+              <select className='bg-gray-100 max-w-20' onChange={(e) => setUserData(prev => ({ ...prev, gender: e.target.value }))} value={userData.gender || ''} >
+                <option value="">Select Gender</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
               </select>
               :
-              <p className='text-gray-400'>{userData.gender}</p>
+              <p className='text-gray-400'>{userData.gender || 'Not specified'}</p>
           }
           <p className='font-medium'>Date of Birth</p>
           {
             isEdit ?
-              <input className='bg-gray-100 max-w-20' type='date' value={userData.dob} onChange={e => setUserData(prev => ({ ...prev, dob: e.target.value }))} />
-              : <p className='text-gray-400'>{userData.dob}</p>
+              <input className='bg-gray-100 max-w-20' type='date' value={userData.dob || ''} onChange={e => setUserData(prev => ({ ...prev, dob: e.target.value }))} />
+              : <p className='text-gray-400'>{userData.dob || 'Not specified'}</p>
           }
         </div>
       </div>
